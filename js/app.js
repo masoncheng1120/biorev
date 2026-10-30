@@ -96,10 +96,13 @@
 
 
   function filteredMCQ() {
-    return bank.mcqs.filter((q) => !state.chapter || q.chapter === state.chapter);
+    // state.chapter === 0 means All chapters
+    if (!state.chapter) return bank.mcqs.slice();
+    return bank.mcqs.filter((q) => q.chapter === state.chapter);
   }
   function filteredSQ() {
-    return bank.structured.filter((q) => !state.chapter || q.chapter === state.chapter);
+    if (!state.chapter) return bank.structured.slice();
+    return bank.structured.filter((q) => q.chapter === state.chapter);
   }
 
   function chapterName(id) {
@@ -107,22 +110,41 @@
     return c ? `Ch ${c.id}: ${c.title}` : "All chapters";
   }
 
-  function setView(view) {
+  function syncChapterSelects() {
+    const v = String(state.chapter || 0);
+    ["mcq-chapter", "sq-chapter", "browse-chapter"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el && el.value !== v) el.value = v;
+    });
+  }
+
+  function setChapter(ch) {
+    const n = Number(ch);
+    state.chapter = Number.isFinite(n) && n > 0 ? n : 0;
+    syncChapterSelects();
+  }
+
+  function setView(view, opts = {}) {
     state.view = view;
     $$(".panel").forEach((p) => p.classList.toggle("active", p.id === `view-${view}`));
     $$(".nav button[data-view]").forEach((b) =>
       b.classList.toggle("active", b.dataset.view === view)
     );
+    syncChapterSelects();
     if (view === "mcq") {
       state.mode = "mcq";
-      state.index = 0;
-      state.selected = null;
-      state.checked = false;
+      if (!opts.preserveIndex) {
+        state.index = 0;
+        state.selected = null;
+        state.checked = false;
+      }
       renderMCQ();
     }
     if (view === "sq") {
       state.mode = "sq";
-      state.index = 0;
+      if (!opts.preserveIndex) {
+        state.index = 0;
+      }
       renderSQ();
     }
     if (view === "home") renderHome();
@@ -149,15 +171,13 @@
     $("#chapter-grid").innerHTML = counts;
     $$("#chapter-grid [data-go-mcq]").forEach((btn) =>
       btn.addEventListener("click", () => {
-        state.chapter = Number(btn.dataset.goMcq);
-        $("#mcq-chapter").value = String(state.chapter);
+        setChapter(btn.dataset.goMcq);
         setView("mcq");
       })
     );
     $$("#chapter-grid [data-go-sq]").forEach((btn) =>
       btn.addEventListener("click", () => {
-        state.chapter = Number(btn.dataset.goSq);
-        $("#sq-chapter").value = String(state.chapter);
+        setChapter(btn.dataset.goSq);
         setView("sq");
       })
     );
@@ -342,18 +362,34 @@
     $("#browse-sq").innerHTML = sq || "<p>None</p>";
     $$("#browse-mcq [data-open-mcq]").forEach((btn) =>
       btn.addEventListener("click", () => {
+        const qid = btn.dataset.openMcq;
+        const q = bank.mcqs.find((x) => x.id === qid);
+        if (!q) return;
+        // Keep current All-chapters filter; if a single chapter is selected and
+        // somehow mismatched, switch to the question's chapter.
+        if (state.chapter && q.chapter !== state.chapter) {
+          setChapter(q.chapter);
+        }
         const list = filteredMCQ();
-        state.index = list.findIndex((q) => q.id === btn.dataset.openMcq);
+        const idx = list.findIndex((x) => x.id === qid);
+        state.index = idx >= 0 ? idx : 0;
         state.selected = null;
         state.checked = false;
-        setView("mcq");
+        setView("mcq", { preserveIndex: true });
       })
     );
     $$("#browse-sq [data-open-sq]").forEach((btn) =>
       btn.addEventListener("click", () => {
+        const qid = btn.dataset.openSq;
+        const q = bank.structured.find((x) => x.id === qid);
+        if (!q) return;
+        if (state.chapter && q.chapter !== state.chapter) {
+          setChapter(q.chapter);
+        }
         const list = filteredSQ();
-        state.index = list.findIndex((q) => q.id === btn.dataset.openSq);
-        setView("sq");
+        const idx = list.findIndex((x) => x.id === qid);
+        state.index = idx >= 0 ? idx : 0;
+        setView("sq", { preserveIndex: true });
       })
     );
   }
@@ -367,34 +403,29 @@
     $("#browse-chapter").innerHTML = opts;
   }
 
+  function onChapterChange(raw) {
+    setChapter(raw);
+    state.index = 0;
+    state.selected = null;
+    state.checked = false;
+    if (state.view === "mcq") renderMCQ();
+    else if (state.view === "sq") renderSQ();
+    else if (state.view === "browse") renderBrowse();
+  }
+
   function bind() {
     $$(".nav button[data-view]").forEach((b) =>
       b.addEventListener("click", () => setView(b.dataset.view))
     );
-    $("#mcq-chapter").addEventListener("change", (e) => {
-      state.chapter = Number(e.target.value);
-      state.index = 0;
-      state.selected = null;
-      state.checked = false;
-      renderMCQ();
-    });
-    $("#sq-chapter").addEventListener("change", (e) => {
-      state.chapter = Number(e.target.value);
-      state.index = 0;
-      renderSQ();
-    });
-    $("#browse-chapter").addEventListener("change", (e) => {
-      state.chapter = Number(e.target.value);
-      renderBrowse();
-    });
+    $("#mcq-chapter").addEventListener("change", (e) => onChapterChange(e.target.value));
+    $("#sq-chapter").addEventListener("change", (e) => onChapterChange(e.target.value));
+    $("#browse-chapter").addEventListener("change", (e) => onChapterChange(e.target.value));
     $("#start-mcq").addEventListener("click", () => {
-      state.chapter = 0;
-      $("#mcq-chapter").value = "0";
+      setChapter(0);
       setView("mcq");
     });
     $("#start-sq").addEventListener("click", () => {
-      state.chapter = 0;
-      $("#sq-chapter").value = "0";
+      setChapter(0);
       setView("sq");
     });
   }
