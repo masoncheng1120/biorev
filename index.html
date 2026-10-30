@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en-HK">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HKDSE S4 Biology · Chapters 1–5 Practice</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="inner">
+      <a class="logo" href="#" id="logo-home">
+        <span class="logo-badge">Bio</span>
+        <span>S4 Biology Practice</span>
+      </a>
+      <nav class="nav">
+        <button type="button" data-view="home" class="active">Home</button>
+        <button type="button" data-view="mcq">MCQ practice</button>
+        <button type="button" data-view="sq">Structured practice</button>
+        <button type="button" data-view="browse">Browse bank</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section id="view-home" class="panel active">
+      <div class="hero">
+        <h1>HKDSE S4 Biology — Chapters 1 to 5</h1>
+        <p>
+          Offline practice site for Caritas Wu Cheng-chung College. Drill multiple-choice questions,
+          then open structured questions with HKDSE-style marking schemes and highlighted
+          <span class="kw">key words</span>.
+        </p>
+        <div class="hero-actions">
+          <button class="btn primary" id="start-mcq">Start MCQ practice</button>
+          <button class="btn" id="start-sq">Start structured practice</button>
+        </div>
+        <div class="meta" style="margin-top:1rem">
+          <span class="chip"><span id="stat-mcq">0</span> MCQs</span>
+          <span class="chip"><span id="stat-sq">0</span> structured questions</span>
+          <span class="chip warn">Suggested answers flagged for teacher check</span>
+        </div>
+      </div>
+      <div class="grid" id="chapter-grid"></div>
+    </section>
+
+    <section id="view-mcq" class="panel">
+      <div class="toolbar">
+        <div class="field">
+          <label for="mcq-chapter">Chapter</label>
+          <select id="mcq-chapter"></select>
+        </div>
+        <div class="progress" id="mcq-progress">—</div>
+      </div>
+      <div id="mcq-root"></div>
+    </section>
+
+    <section id="view-sq" class="panel">
+      <div class="toolbar">
+        <div class="field">
+          <label for="sq-chapter">Chapter</label>
+          <select id="sq-chapter"></select>
+        </div>
+        <div class="progress" id="sq-progress">—</div>
+      </div>
+      <div id="sq-root"></div>
+    </section>
+
+    <section id="view-browse" class="panel">
+      <div class="toolbar">
+        <div class="field">
+          <label for="browse-chapter">Chapter</label>
+          <select id="browse-chapter"></select>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <h3>MCQs</h3>
+          <div class="list" id="browse-mcq"></div>
+        </div>
+        <div class="card">
+          <h3>Structured</h3>
+          <div class="list" id="browse-sq"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    Open <code>index.html</code> in a browser (no server required). See
+    <code>MISSING_ANSWERS.md</code> for items that need teacher verification.
+  </footer>
+
+  <div id="fig-lightbox" class="fig-lightbox" title="Click to close">
+    <img alt="Enlarged figure" />
+  </div>
+
+
+  <script src="data/questions.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.getElementById("logo-home").addEventListener("click", function (e) {
+      e.preventDefault();
+      document.querySelector('.nav button[data-view="home"]').click();
+    });
+  </script>
+</body>
+</html>
